@@ -1,0 +1,11 @@
+{
+  "name": "Spring MVC 3.1 In-Depth",
+  "description": "An in-depth look at new features in Spring MVC 3.1",
+  "sections": [
+    {"section":"intro"},
+    {"section":"java-config"},
+    {"section":"infrastructure"},
+    {"section":"redirect"},
+    {"section":"end"}
+  ]
+}
