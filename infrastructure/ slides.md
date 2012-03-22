@@ -82,13 +82,19 @@
     }
 
 !SLIDE bullets incremental
+# Old @MVC
 # Request Mapping Process
-## Old @MVC
 
-* Two-stage decision
+* Two stages
 * `HandlerMapping` selects controller
 * <span style="color:blue">Perhaps not from annotations!</span>
-* `HandlerAdapter` selects the method
+* `HandlerAdapter` narrows down the method
+
+!SLIDE
+## Designed to work with
+## different `HandlerMapping` types
+## E.g.
+## `SimpleUrlHandlerMapping` <br> and others
 
 !SLIDE bullets incremental
 # Sounds reasonable but..
@@ -98,7 +104,7 @@
 * Splits decision making process
 
 !SLIDE smaller
-# Back to our example
+# Back to the code
 
     @@@ java
 
@@ -121,13 +127,13 @@
     }
 
 !SLIDE smaller
-# Back to our example
+# Back to the code
 
     @@@ java
 
 	// GET /foo Accept=text/html
     
-    @Controller  // (1) Controller selected
+    @Controller  // (1) Controller selected based on "/foo"
     public FooController {
     
     
@@ -144,16 +150,16 @@
     }
 
 !SLIDE smaller
-# Back to our example
+# Back to the code
 
     @@@ java
 
 	// GET /foo Accept=text/html
     
-    @Controller  // (1) Controller selected
+    @Controller  // (1) Controller selected based on "/foo"
     public FooController {
     
-      // (2) Only to find that method doesn't match
+      // (2) Only to find later that method doesn't match
       
 
       @RequestMapping(value = "/foo",
@@ -167,17 +173,17 @@
     }
 
 !SLIDE smaller
-# Back to our example
+# Back to the code
 
     @@@ java
 
 	// GET /foo Accept=text/html
     
-    @Controller  // (1) Controller selected
+    @Controller  // (1) Controller selected based on "/foo"
     public FooController {
     
-      // (2) Only to find that method doesn't match
-      // (3) Harder to reason about the error at this point
+      // (2) Only to find later that method doesn't match
+      // (3) Harder to reason at this stage about the error
 
       @RequestMapping(value = "/foo",
                       method=RequestMethod.GET, 
@@ -190,12 +196,12 @@
     }
 
 !SLIDE bullets incremental
-# Other drawbacks
+# Other limitations of prior approach
 
 * One URL per controller   
-* Selected method not exposed to `HandlerInterceptor`
-* Nor to `HandlerExceptionResolver`
-* Harder to reason
+* Controller method not known to `HandlerInterceptor`
+* Ditto for `HandlerExceptionResolver`
+* Harder to reason about the process
 
 !SLIDE bullets incremental
 # New @MVC
@@ -209,11 +215,11 @@
 
 * `HandlerMapping` selects a `HandlerMethod`
 * Not a controller
-* `HandlerAdapter` simply invokes the method
-* Not involved in selecting it
+* `HandlerAdapter` invokes selected method
+* Doesn't know how it's chosen
 
 !SLIDE smaller
-# The example re-visited in 3.1
+# The code re-visited with 3.1
 
     @@@ java
 
@@ -222,6 +228,7 @@
     @Controller
     public FooController {
     
+
 
 
       @RequestMapping(value = "/foo",
@@ -234,7 +241,7 @@
     }
 
 !SLIDE smaller
-# The example re-visited in 3.1
+# The code re-visited with 3.1
 
     @@@ java
 
@@ -243,11 +250,12 @@
     @Controller
     public FooController {
     
-    
+      // A single point of decision
+
       
       @RequestMapping(value = "/foo",
                       method=RequestMethod.GET, 
-                      produces="text/plain")
+                      headers="Accept=text/plain")
       public @ResponseBody Foo getValue() {
       
       }
@@ -255,7 +263,7 @@
     }
 
 !SLIDE smaller
-# The example re-visited in 3.1
+# The code re-visited with 3.1
 
     @@@ java
 
@@ -264,11 +272,34 @@
     @Controller
     public FooController {
     
-      // Results in 406 (NOT_ACCEPTABLE)
+      // A single point of decision
+      // Result is 406 (NOT_ACCEPTABLE)
             
       @RequestMapping(value = "/foo",
                       method=RequestMethod.GET, 
-                      produces="text/plain")
+                      headers="Accept=text/plain")
+      public @ResponseBody Foo getValue() {
+      
+      }
+    
+    }
+
+!SLIDE smaller
+# The code re-visited with 3.1
+
+    @@@ java
+
+	// GET /foo Accept=text/html
+    
+    @Controller
+    public FooController {
+    
+      // A single point of decision
+      // Result is 406 (NOT_ACCEPTABLE)
+            
+      @RequestMapping(value = "/foo",
+                      method=RequestMethod.GET, 
+                      produces="text/plain") // <-- produces
       public @ResponseBody Foo getValue() {
       
       }
@@ -278,9 +309,13 @@
 !SLIDE bullets incremental
 # Other limitations lifted
 
-* Same URL processing can be split across controllers
-* _(it's just method endpoints)_
-* Selected method exposed to `HandlerInterceptor`, `HandlerExceptionResolver`
+* Same URL processing can be <br> split across controllers
+* Controller method known to `HandlerInterceptor`, `HandlerExceptionResolver`
+
+!SLIDE
+# Demo
+## <a href="https://github.com/rstoyanchev/spring-mvc-31-demo">spring-mvc-31-demo</a>
+<br>
 
 !SLIDE
 ## Incidentally after the 3.1 release we had this ticket
@@ -289,8 +324,7 @@
 # <a href="https://jira.springsource.org/browse/SPR-9063">SPR-9063</a>
 
 * The following code worked in 3.0
-* Treated as "Ambiguous mapping" in 3.1
-* _(code relied on the two-stage process)_
+* Treated as "ambiguous mapping" in 3.1
 
 !SLIDE smaller
 # The code
@@ -298,6 +332,30 @@
 	@@@ java
 	
 	
+	
+	@Controller
+	@RequestMapping(value = "/foo",
+	    method = {RequestMethod.GET, RequestMethod.POST })
+	public class FooController {
+	
+	    @RequestMapping(method = RequestMethod.GET)
+	    public String index() {
+	        return "form";
+	    }
+	
+	    @RequestMapping(method = RequestMethod.POST)
+	    public String submit() {
+	        return "success";
+	    }
+	
+	}
+
+!SLIDE smaller
+# The code
+
+	@@@ java
+	
+	// Can you guess why {GET, POST} are on the type level?
 	
 	@Controller
 	@RequestMapping(value = "/foo",
@@ -340,37 +398,11 @@
 	
 	}
 
-!SLIDE smaller
-# The code revisited in the new @MVC
+!SLIDE smaller transition=fade
+# The code with the new @MVC
+## Just remove the type-level HTTP method mapping
 
 	@@@ java
-	
-
-	
-	@Controller
-	@RequestMapping(value = "/foo",
-	    method = {RequestMethod.GET, RequestMethod.POST })
-	public class FooController {
-	
-	    @RequestMapping(method = RequestMethod.GET)
-	    public String index() {
-	        return "form";
-	    }
-	
-	    @RequestMapping(method = RequestMethod.POST)
-	    public String submit() {
-	        return "success";
-	    }
-	
-	}
-
-!SLIDE smaller
-# The code revisited in the new @MVC
-
-	@@@ java
-	
-	// Just remove the type-level HTTP methods!
-	
 
 	@Controller
 	@RequestMapping(value = "/foo")
@@ -394,10 +426,10 @@
 !SLIDE bullets incremental
 # The upgrade path
 
-* Automatical upgrade if using `<mvc:annotation-driven>` or `@EnableWebMvc`
-* Must update your configuration otherwise
+* Automatic upgrade with the <br> MVC namespace or MVC Java config
+* You must update configuration otherwise
 * We recommended you do so
-* Old @MVC won't get any new features
+* No more new features on old @MVC
 
 !SLIDE bullets incremental
 ## `HandlerMethod`:
@@ -457,6 +489,8 @@
 * More customizable
 * Better flexible method signature support
 
+!SLIDE
+# Demo
 
 
 

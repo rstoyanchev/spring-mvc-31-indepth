@@ -1,70 +1,26 @@
 !SLIDE subsection
 # MVC Java Config Design
 
-!SLIDE
-# Design goal
-
-!SLIDE incremental
-## Replicate the benefits of
-## the MVC XML namespace in Java
-
-!SLIDE incremental
-## minus the downsides
-
-!SLIDE incremental bullets
-# MVC namespace
-
-* On-ramp for Spring MVC applications
-* Higher-level config language
-* Succinct
-* Little knowledge required
-
 !SLIDE bullets incremental
-# But also..
-
-* Config not easy to see
-* No path from simple to advanced
-* Black box
-
-!SLIDE bullets incremental
-# Even more confusing to..
-
-* Copy & paste config snippets
-* When looking to solve a problem
-* How does it relate to the namespace?
-
-!SLIDE
-# Lesson learned:
-
-## Transparency is key for Spring MVC config!
-
-!SLIDE
-## And so is flexibility
-
-!SLIDE bullets incremental small
-# `WebMvcConfigurationSupport`
-
-* The central MVC Java config class
-* Config comparable to that of the MVC namespace
-* But using `@Bean` methods
-* Easy to read
-
-!SLIDE bullets incremental small
-# How to make use of it?
-
-* One obvious choice..
-* Extend `WebMvcConfigurationSupport`
-* Override `@Bean` methods
-
-!SLIDE bullets incremental
-## But how to replicate the MVC namespace experience?
+# Design goals
 
 * A simple starting point
-* Little knowledge required
-* Higher-level config language
+* Transparency
+* Flexibility
+* A path from simple to advanced
+
+!SLIDE
+# Why does it matter?
+
+!SLIDE
+## It's a relatively simple mechanism worth understanding
+
+!SLIDE
+## You may use for your own purposes, e.g.
+## to design your your own `@EnableXyz`
 
 !SLIDE small
-# Simple starting point
+# A simple starting point
 
 	@@@ java
 
@@ -74,13 +30,45 @@
 
         }
 
+!SLIDE
+## No base class
+## No Spring MVC beans in sight
+
+!SLIDE bullets incremental
+# What it provides
+
+* @MVC request processing
+* `ConversionService`
+* Global JSR-303 validator
+* `HttpMessageConverter` registrations
+* A few others
+
+!SLIDE bullets incremental
+# What can be customized
+
+* Implement `WebMvcConfigurer`
+* Or extend `WebMvcConfigurerAdapter`
+
+!SLIDE
+## Still no Spring beans
+## Implement an interface and magic happens
+
+!SLIDE
+# Demo
+## <a href="https://github.com/SpringSource/spring-framework-issues/tree/master/SPR-0000-war-java">SPR-0000-war-java</a>
+
+!SLIDE
+## No Spring beans
+## Implement an interface and magic happens
+
+!SLIDE
+# How does it work?
 
 !SLIDE small
-# Simple starting point
 
 	@@@ java
 
-        @EnableWebMvc   // <-- What's behind ?
+        @EnableWebMvc  // <-- What's behind?
         @Configuration
         public class WebConfig {
 
@@ -111,85 +99,46 @@
         }
 
 !SLIDE
-## i.e. 
-## import rather than extend the configuration
+## The configuration is imported
 
-!SLIDE 
-## What about config customizations and
-## a higher-level config language?
+!SLIDE bullets incremental small
+# `WebMvcConfigurationSupport`
 
-!SLIDE smaller
-# Customizations
-
-    @@@ java
-
-    @EnableWebMvc
-    @Configuration
-    public class WebConfig implements WebMvcConfigurer {
-
-
-
-
-
-
-
-
-
-    }
-
-!SLIDE smaller
-# Customizations
-
-    @@@ java
-
-    @EnableWebMvc
-    @Configuration
-    public class WebConfig implements WebMvcConfigurerAdapter {
-
-
-
-
-
-
-
-
-
-    }
-
-!SLIDE smaller
-# Customizations
-
-	@@@ java
-
-    @EnableWebMvc
-    @Configuration
-    public class WebConfig implements WebMvcConfigurerAdapter {
-
-        @Override
-        public void addInterceptors(InterceptorRegistry reg){
-
-        }
- 
- 
-        // More options in WebMvcConfigurer..
-
-    }
+* Contains the imported configuration
+* Uses `@Bean` methods
+* Just like your configuration
+* Easy to read
 
 !SLIDE
-## still no Spring MVC beans in our base class!
-### (config imported instead)
+# Demo
+
+!SLIDE
+## How does importing the configuration allow for customizations?
+
+!SLIDE
+## Recall that we
+## implement an interface and magic happens
+
 
 !SLIDE smaller bullets incremental
-# How does it work?
+# `DelegatingWebMvcConfigurationSupport`
 
-* You **import** `DelegatingWebMvcConfigurationSupport`
-* which extends `WebMvcConfigurationSupport`
-* "Detects" implementations of `WebMvcConfigurer`
-* (via `@Autowired`)
-* Delegates to all to customize the config
+* A sub-class of `WebMvcConfigurationSupport`
+* "Detects" `WebMvcConfigurer` implementations
+* Via `@Autowired`
+* Delegates to detected instances to customize the config
 
 !SLIDE
-## Still at any point you can switch
+## However at any point you can switch
 ## to extending directly from
 ## **`WebMvcConfigurationSupport`**
+
+!SLIDE bullets incremental
+## Extending directly from `WebMvcConfigurationSupport`
+
+* Remove `@EnableWebMvc`
+* i.e. don't import
+* Extend `WebMvcConfigurationSupport`
+* Override `@Bean` and other available methods
+
 

@@ -5,14 +5,6 @@
 ## Rossen Stoyanchev
 ### _SpringSource, VMware_
 
-!SLIDE bullets center
-# Agenda
-
-* MVC Java Config Design
-* @MVC Support Classes
-* `RedirectAttributes`
-* Content Negotiation
-* UriComponentsBuilder
 
 
 

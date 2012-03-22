@@ -7,14 +7,14 @@
 !SLIDE incremental bullets small
 
 * Async request processing
-* <a href="github.com/SpringSource/spring-test-mvc">spring-test-mvc</a>
+* <a href="http://github.com/SpringSource/spring-test-mvc">spring-test-mvc</a>
 * `@Resource` stereotype <a href="https://jira.springsource.org/browse/SPR-8406">SPR-8406</a>
 * Content negotiation refinements <a href="https://jira.springsource.org/browse/SPR-8410">SPR-8410</a>
 * Global `@ExceptionHandler` methods
-* ...
+* Much more
 
 !SLIDE
-# Get Involved!
+# Hwo to get involved
 
 !SLIDE incremental bullets small
 
@@ -34,4 +34,3 @@
 <br />
 ## Rossen Stoyanchev
 ### Twitter: <a href="http://twitter.com/rstoya05">@rstoya05</a>
-
